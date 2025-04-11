@@ -80,7 +80,42 @@ impl Pricing for Ethereum {
 #[derive(Debug, Deserialize)]
 struct SP500 {
     timestamp: String,
-    value: f64,
+    price: f64,
+}
+
+
+impl Pricing for SP500 {
+    fn fetch_price(&mut self) -> Result<(), Box<dyn std::error::Error>> {
+        let api_key = "YOUR_ALPHA_VANTAGE_API_KEY";
+        let url = format!(
+            "https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=SPY&apikey={}",
+            api_key
+        );
+
+        let response = ureq::get(&url)
+            .call()?
+            .into_json::<serde_json::Value>()?;
+
+        self.price = response["Global Quote"]["05. price"]
+            .as_str()
+            .ok_or("Failed to parse SP500 value")?
+            .parse()?;
+        self.timestamp = chrono::Local::now().to_rfc3339();
+        Ok(())
+    }
+
+    fn save_to_file(&self) -> Result<(), Box<dyn std::error::Error>> {
+        let mut file = OpenOptions::new()
+            .append(true)
+            .create(true)
+            .open("sp500_values.csv")?;
+
+        if file.metadata()?.len() == 0 {
+            writeln!(file, "timestamp,value")?;
+        }
+        writeln!(file, "{},{}", self.timestamp, self.price)?;
+        Ok(())
+    }
 }
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -89,6 +124,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         //Ethereum
         Box::new(Ethereum { timestamp: String::new(), price: 0.0 }),
         //SP500
+        Box::new(SP500 { timestamp: String::new(), price: 0.0 }),
     ];
 
     loop {
