@@ -47,7 +47,35 @@ struct Ethereum {
     price: f64,
 }
 
+// Ethereum implementation
+impl Pricing for Ethereum {
+    fn fetch_price(&mut self) -> Result<(), Box<dyn std::error::Error>> {
+        let response = ureq::get("https://api.coingecko.com/api/v3/simple/price")
+            .query("ids", "ethereum")
+            .query("vs_currencies", "usd")
+            .call()?
+            .into_json::<serde_json::Value>()?;
 
+        self.price = response["ethereum"]["usd"]
+            .as_f64()
+            .ok_or("Failed to parse Ethereum price")?;
+        self.timestamp = chrono::Local::now().to_rfc3339();
+        Ok(())
+    }
+
+    fn save_to_file(&self) -> Result<(), Box<dyn std::error::Error>> {
+        let mut file = OpenOptions::new()
+            .append(true)
+            .create(true)
+            .open("ethereum_prices.csv")?;
+
+        if file.metadata()?.len() == 0 {
+            writeln!(file, "timestamp,price")?;
+        }
+        writeln!(file, "{},{}", self.timestamp, self.price)?;
+        Ok(())
+    }
+}
 // SP500 implementation (similar structure with different API endpoint)
 #[derive(Debug, Deserialize)]
 struct SP500 {
@@ -59,7 +87,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut assets: Vec<Box<dyn Pricing>> = vec![
         Box::new(Bitcoin { timestamp: String::new(), price: 0.0 }),
         //Ethereum
-
+        Box::new(Ethereum { timestamp: String::new(), price: 0.0 }),
         //SP500
     ];
 
