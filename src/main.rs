@@ -36,6 +36,7 @@ impl Pricing for Bitcoin {
             .open("bitcoin_prices.csv")?;
 
         writeln!(file, "{},{}", self.timestamp, self.price)?;
+        println!("{},{}", self.timestamp, self.price);
         Ok(())
     }
 }
@@ -73,6 +74,7 @@ impl Pricing for Ethereum {
             writeln!(file, "timestamp,price")?;
         }
         writeln!(file, "{},{}", self.timestamp, self.price)?;
+        println!("{},{}", self.timestamp, self.price);
         Ok(())
     }
 }
@@ -114,6 +116,7 @@ impl Pricing for SP500 {
             writeln!(file, "timestamp,value")?;
         }
         writeln!(file, "{},{}", self.timestamp, self.price)?;
+        println!("{},{}", self.timestamp, self.price);
         Ok(())
     }
 }
