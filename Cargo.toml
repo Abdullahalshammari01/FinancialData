@@ -1,5 +1,10 @@
+# Remove workspace configuration and add [package]
+[package]
+name = "financial_data"
+version = "0.1.0"
+edition = "2021"
+
 [dependencies]
 ureq = { version = "2.6.0", features = ["json"] }
 serde = { version = "1.0", features = ["derive"] }
-serde_json = "1.0"
 chrono = "0.4.24"
